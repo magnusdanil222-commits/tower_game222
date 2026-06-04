@@ -77,9 +77,7 @@
                 <div class="progress">
                     <div class="title font-wenxue">0%</div>
                     <div class="bar">
-                        <div class="sub">
-                            <div class="percent"></div>
-                        </div>
+                        <div class="sub"><div class="percent"></div></div>
                     </div>
                     <div class="text">Loading...</div>
                 </div>
@@ -87,12 +85,8 @@
         </div>
         
         <div class="landing hide">
-            <div class="action-1">
-                <img src="./assets/main-index-title.png" class="title swing">
-            </div>
-            <div class="action-2">
-                <img id="start" src="./assets/main-index-start.png" class="start">
-            </div>
+            <div class="action-1"><img src="./assets/main-index-title.png" class="title swing"></div>
+            <div class="action-2"><img id="start" src="./assets/main-index-start.png" class="start"></div>
         </div>
         
         <div id="modal" class="modal hide">
@@ -118,23 +112,18 @@
                 </div>
             </div>
         </div>
-        
-        <div class="wxShare hide">
-            <img src="./assets/main-share-icon.png">
-        </div>
+        <div class="wxShare hide"><img src="./assets/main-share-icon.png"></div>
     </div>
 
     <script src="./dist/main.js"></script>
     <script src="./assets/zepto-1.1.6.min.js"></script>
     <script>
-        // Инициализация Telegram WebApp
         var tg = window.Telegram?.WebApp;
         var telegramUserId = null;
         
         if (tg) {
             tg.ready();
             tg.expand();
-            // Получаем ID пользователя из безопасного контекста Telegram
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 telegramUserId = tg.initDataUnsafe.user.id;
             }
@@ -145,9 +134,7 @@
         var gameHeight = window.innerHeight;
         var ratio = 1.5;
         
-        if (gameHeight / gameWidth < ratio) {
-            gameWidth = Math.ceil(gameHeight / ratio);
-        }
+        if (gameHeight / gameWidth < ratio) { gameWidth = Math.ceil(gameHeight / ratio); }
         $('.content').css({ "height": gameHeight + "px", "width": gameWidth + "px" });
         $('.js-modal-content').css({ "width": gameWidth + "px" });
 
@@ -155,75 +142,65 @@
             if (domReady && canvasReady) {
                 $('#canvas').show();
                 loadFinish = true;
-                setTimeout(function () {
-                    $('.loading').hide();
-                    $('.landing').show();
-                }, 1000);
+                setTimeout(function () { $('.loading').hide(); $('.landing').show(); }, 1000);
             }
         }
 
         function updateLoading(status) {
-            var success = status.success;
-            var total = status.total;
-            var failed = status.failed;
-            if (failed > 0 && !loadError) {
-                loadError = true;
-                alert('Network error... Please try again.');
-                return;
-            }
+            var success = status.success; var total = status.total; var failed = status.failed;
+            if (failed > 0 && !loadError) { loadError = true; alert('Network error...'); return; }
             var percent = parseInt((success / total) * 100);
-            if (percent === 100 && !canvasReady) {
-                canvasReady = true;
-                hideLoading();
-            }
-            percent = percent > 98 ? 98 : percent;
-            percent = percent + '%';
-            $('.loading .title').text(percent);
-            $('.loading .percent').css({ 'width': percent });
+            if (percent === 100 && !canvasReady) { canvasReady = true; hideLoading(); }
+            percent = percent > 98 ? 98 : percent; percent = percent + '%';
+            $('.loading .title').text(percent); $('.loading .percent').css({ 'width': percent });
         }
 
-        function overShowOver() {
-            $('#modal').show();
-            $('#over-modal').show();
-            $('#over-zero').show();
-        }
+        function overShowOver() { $('#modal').show(); $('#over-modal').show(); $('#over-zero').show(); }
 
-        // Конфигурация игрового движка TowerGame
         const option = {
-            width: gameWidth,
-            height: gameHeight,
-            canvasId: 'canvas',
-            soundOn: true,
-            setGameScore: function (s) {
-                score = s;
-            },
-            setGameSuccess: function (s) {
-                successCount = s;
-            },
+            width: gameWidth, height: gameHeight, canvasId: 'canvas', soundOn: true,
+            setGameScore: function (s) { score = s; },
+            setGameSuccess: function (s) { successCount = s; },
             setGameFailed: function (f) {
                 $('#score').text(score);
                 if (f >= 3) {
                     overShowOver();
                     
-                    // 🔥 ОТПРАВКА ОЧКОВ НА ПРОКЛАДКУ NETLIFY ПРИ GAME OVER
                     if (telegramUserId) {
-                        var netlifyUrl = "https://glistening-maamoul-63efac.netlify.app/.netlify/functions/game_result";
+                        // 🛠 НАСТРОЙКИ НАПРЯМУЮ В КОДЕ ИГРЫ
+                        var BOT_TOKEN = "8764219764:AAFEDrhe_x9eGdXyX0BJFiF0yMNHh--T3eY"; 
+                        var PROMOCODE = "LUDO2026";
+                        var PARTNER_BOT_URL = "https://t.me/slotarena_bot?start=cdKdVITQFtQ";
                         
-                        fetch(netlifyUrl, {
+                        var text = "";
+                        var replyMarkup = {};
+
+                        if (score >= 150) {
+                            text = "🏆 <b>СТРОИТЕЛЬСТВО ЗАВЕРШЕНО! Результат: " + score + " очков!</b>\n\nУсловия выполнены! Твой промокод:\n<code>" + PROMOCODE + "</code>";
+                            replyMarkup = {
+                                inline_keyboard: [
+                                    [{ text: "🚀 Активировать промокод", url: PARTNER_BOT_URL }]
+                                ]
+                            };
+                        } else {
+                            text = "😢 <b>Недостаточно очков для приза!</b>\n\nТы набрал <b>" + score + "</b> очков. Нужно набрать минимум <b>150 очков</b>.\n\nПопробуй еще раз, запустив игру из Главного меню!";
+                        }
+
+                        // 🔥 ТОТ САМЫЙ ПРЯМОЙ ЗАПРОС К TELEGRAM API, КОТОРЫЙ РАБОТАЕТ ВЕЗДЕ
+                        var telegramUrl = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
+                        
+                        fetch(telegramUrl, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                user_id: telegramUserId,
-                                score: score
+                                chat_id: telegramUserId,
+                                text: text,
+                                parse_mode: "HTML",
+                                reply_markup: replyMarkup
                             })
                         })
-                        .then(function() {
-                            // Плавно закрываем окно после отправки запроса
-                            setTimeout(function() { tg.close(); }, 800);
-                        })
-                        .catch(function(err) { 
-                            console.error("Ошибка отправки API:", err); 
-                        });
+                        .then(function() { setTimeout(function() { tg.close(); }, 800); })
+                        .catch(function(err) { console.error(err); });
                     }
                 }
             }
@@ -231,44 +208,16 @@
 
         function gameReady() {
             game = TowerGame(option);
-            game.load(function () {
-                game.init();
-                setTimeout(function () { game.playBgm(); });
-            }, updateLoading);
+            game.load(function () { game.init(); setTimeout(function () { game.playBgm(); }); }, updateLoading);
         }
 
         var isWechat = navigator.userAgent.toLowerCase().indexOf("micromessenger") !== -1;
-        if (isWechat) {
-            document.addEventListener("WeixinJSBridgeReady", gameReady, false);
-        } else {
-            gameReady();
-        }
-
-        function indexHide() {
-            $('.landing .action-1').addClass('slideTop');
-            $('.landing .action-2').addClass('slideBottom');
-            setTimeout(function () { $('.landing').hide(); }, 950);
-        }
-
-        $('#start').on('click', function () {
-            if (gameStart) return;
-            gameStart = true;
-            setTimeout(function () { game.playBgm(); });
-            indexHide();
-            setTimeout(game.start, 400);
-        });
-
-        $('.js-reload').on('click', function () {
-            window.location.href = window.location.href + '?s=' + (+new Date());
-        });
-
-        $('.js-invite').on('click', function () { $('.wxShare').show(); });
-        $('.wxShare').on('click', function () { $('.wxShare').hide(); });
-
-        window.addEventListener('load', function () {
-            domReady = true;
-            hideLoading();
-        }, false);
+        if (isWechat) { document.addEventListener("WeixinJSBridgeReady", gameReady, false); } else { gameReady(); }
+        function indexHide() { $('.landing .action-1').addClass('slideTop'); $('.landing .action-2').addClass('slideBottom'); setTimeout(function () { $('.landing').hide(); }, 950); }
+        $('#start').on('click', function () { if (gameStart) return; gameStart = true; setTimeout(function () { game.playBgm(); }); indexHide(); setTimeout(game.start, 400); });
+        $('.js-reload').on('click', function () { window.location.href = window.location.href + '?s=' + (+new Date()); });
+        $('.js-invite').on('click', function () { $('.wxShare').show(); }); $('.wxShare').on('click', function () { $('.wxShare').hide(); });
+        window.addEventListener('load', function () { domReady = true; hideLoading(); }, false);
     </script>
 </body>
 </html>
