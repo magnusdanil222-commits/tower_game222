@@ -6,6 +6,7 @@
     <title>Tower Building</title>
     <link rel="icon" type="image/x-icon" href="./assets/favicon.png">
     
+    <!-- SDK ТЕЛЕГРАМА -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
@@ -167,7 +168,6 @@
                     overShowOver();
                     
                     if (telegramUserId) {
-                        // 🛠 НАСТРОЙКИ НАПРЯМУЮ В КОДЕ ИГРЫ
                         var BOT_TOKEN = "8764219764:AAFEDrhe_x9eGdXyX0BJFiF0yMNHh--T3eY"; 
                         var PROMOCODE = "LUDO2026";
                         var PARTNER_BOT_URL = "https://t.me/slotarena_bot?start=cdKdVITQFtQ";
@@ -179,14 +179,19 @@
                             text = "🏆 <b>СТРОИТЕЛЬСТВО ЗАВЕРШЕНО! Результат: " + score + " очков!</b>\n\nУсловия выполнены! Твой промокод:\n<code>" + PROMOCODE + "</code>";
                             replyMarkup = {
                                 inline_keyboard: [
-                                    [{ text: "🚀 Активировать промокод", url: PARTNER_BOT_URL }]
+                                    [{ text: "🚀 Активировать промокод", url: PARTNER_BOT_URL }],
+                                    [{ text: "🔙 Вернуться в главное меню", callback_data: "go_to_menu_keep" }]
                                 ]
                             };
                         } else {
                             text = "😢 <b>Недостаточно очков для приза!</b>\n\nТы набрал <b>" + score + "</b> очков. Нужно набрать минимум <b>150 очков</b>.\n\nПопробуй еще раз, запустив игру из Главного меню!";
+                            replyMarkup = {
+                                inline_keyboard: [
+                                    [{ text: "🔙 Вернуться в главное меню", callback_data: "go_to_menu_delete" }]
+                                ]
+                            };
                         }
 
-                        // 🔥 ТОТ САМЫЙ ПРЯМОЙ ЗАПРОС К TELEGRAM API, КОТОРЫЙ РАБОТАЕТ ВЕЗДЕ
                         var telegramUrl = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
                         
                         fetch(telegramUrl, {
