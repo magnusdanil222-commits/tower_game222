@@ -6,8 +6,37 @@
     <title>Tower Building</title>
     <link rel="icon" type="image/x-icon" href="./assets/favicon.png">
     
-    <!-- SDK ТЕЛЕГРАМА -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+    // Защита от мульти-вкладок (абуза попыток)
+    if (typeof BroadcastChannel !== "undefined") {
+        const gameChannel = new BroadcastChannel('tower_game_sync');
+
+        // Проверяем, открыта ли игра где-то еще
+        gameChannel.postMessage({ type: 'PING_EXISTING_GAME' });
+
+        gameChannel.onmessage = (event) => {
+            // Если получили сигнал, что другая вкладка уже жива — закрываем эту
+            if (event.data.type === 'PONG_GAME_IS_ALIVE') {
+                const webApp = window.Telegram?.WebApp;
+                if (webApp) {
+                    webApp.showAlert('⚠️ Игра уже запущена в другом окне! Нельзя открывать несколько вкладок одновременно.');
+                    // Даем микропаузу, чтобы пользователь успел прочитать alert, и закрываем дубликат
+                    setTimeout(() => { webApp.close(); }, 500); 
+                } else {
+                    alert('Игра уже запущена в другой вкладке!');
+                    window.close();
+                }
+            }
+            
+            // Если мы старая (первая) вкладка и услышали пинг от новой — ставим ее на место
+            if (event.data.type === 'PING_EXISTING_GAME') {
+                gameChannel.postMessage({ type: 'PONG_GAME_IS_ALIVE' });
+            }
+        };
+    }
+    </script>
     
     <style>
         * { margin: 0; padding: 0; }
@@ -180,7 +209,8 @@
                             replyMarkup = {
                                 inline_keyboard: [
                                     [{ text: "🚀 Активировать промокод", url: PARTNER_BOT_URL }],
-                                    [{ text: "🔙 Вернуться в главное меню", callback_data: "go_to_menu_keep" }]
+                                    // 🔥 ИСПРАВЛЕНО: Изменено с go_to_menu_keep на go_to_menu_delete, чтобы кнопка работала с bot.py
+                                    [{ text: "🔙 Вернуться в главное меню", callback_data: "go_to_menu_delete" }]
                                 ]
                             };
                         } else {
@@ -204,7 +234,7 @@
                                 reply_markup: replyMarkup
                             })
                         })
-                        .then(function() { setTimeout(function() { tg.close(); }, 800); })
+                        .then(function() { setTimeout(function() { if(window.Telegram?.WebApp) window.Telegram.WebApp.close(); }, 800); })
                         .catch(function(err) { console.error(err); });
                     }
                 }
